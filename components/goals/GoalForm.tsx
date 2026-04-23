@@ -40,11 +40,11 @@ export function GoalForm({ userId, goal }: GoalFormProps) {
   const [dateTo, setDateTo] = useState(goal?.date_to || "");
   const [maxMiles, setMaxMiles] = useState(goal?.max_miles?.toString() || "");
   const [cabinClass, setCabinClass] = useState<"economy" | "business" | "any">((goal?.cabin_class as "economy" | "business" | "any") || "any");
-  const [program, setProgram] = useState(goal?.program || "");
+  const [program, setProgram] = useState(goal?.program || "qualquer");
   const [passengers, setPassengers] = useState(goal?.passengers?.toString() || "1");
   const [description, setDescription] = useState(goal?.description || "");
   const [oppTypes, setOppTypes] = useState<string[]>(goal?.opportunity_types || []);
-  const [targetProgram, setTargetProgram] = useState(goal?.target_program || "");
+  const [targetProgram, setTargetProgram] = useState(goal?.target_program || "qualquer");
 
   function toggleOppType(v: string) {
     setOppTypes((prev) => prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]);
@@ -70,13 +70,13 @@ export function GoalForm({ userId, goal }: GoalFormProps) {
         date_to: dateTo || null,
         max_miles: maxMiles ? parseInt(maxMiles) : null,
         cabin_class: cabinClass as "economy" | "business" | "any",
-        program: program || null,
+        program: (program && program !== "qualquer") ? program : null,
         passengers: parseInt(passengers) || 1,
       }),
       ...(type === "accumulation" && {
         description: description || null,
         opportunity_types: oppTypes.length ? oppTypes : null,
-        target_program: targetProgram || null,
+        target_program: (targetProgram && targetProgram !== "qualquer") ? targetProgram : null,
       }),
     };
 
@@ -191,7 +191,7 @@ export function GoalForm({ userId, goal }: GoalFormProps) {
               <Select value={program} onValueChange={setProgram}>
                 <SelectTrigger><SelectValue placeholder="Qualquer" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Qualquer</SelectItem>
+                  <SelectItem value="qualquer">Qualquer</SelectItem>
                   {PROGRAMS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -227,7 +227,7 @@ export function GoalForm({ userId, goal }: GoalFormProps) {
             <Select value={targetProgram} onValueChange={setTargetProgram}>
               <SelectTrigger><SelectValue placeholder="Qualquer programa" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Qualquer</SelectItem>
+                <SelectItem value="qualquer">Qualquer</SelectItem>
                 {PROGRAMS.slice(0, -1).map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
               </SelectContent>
             </Select>
