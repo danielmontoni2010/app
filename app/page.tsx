@@ -39,7 +39,7 @@ export default async function LandingPage() {
               <Button variant="outline" size="sm">Entrar</Button>
             </Link>
             <Link href="/cadastro">
-              <Button variant="gold" size="sm">Começar grátis</Button>
+              <Button variant="gold" size="sm">Assinar agora</Button>
             </Link>
           </div>
         </div>
@@ -80,7 +80,7 @@ export default async function LandingPage() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link href="/cadastro">
             <Button variant="gold" size="lg" className="gap-2 text-base px-8">
-              Começar grátis
+              Assinar agora
               <ArrowRight className="w-5 h-5" />
             </Button>
           </Link>
@@ -90,7 +90,7 @@ export default async function LandingPage() {
             </Button>
           </Link>
         </div>
-        <p className="text-xs text-muted-foreground mt-4">Sem cartão de crédito · plano gratuito para sempre</p>
+        <p className="text-xs text-muted-foreground mt-4">Exclusivo para alunos STM · a partir de R$37/mês</p>
       </section>
 
       {/* ── COMO FUNCIONA ───────────────────────────────────────────────── */}
@@ -188,7 +188,7 @@ export default async function LandingPage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="font-display text-4xl font-bold mb-4">Planos simples e transparentes</h2>
-            <p className="text-muted-foreground text-lg">Comece grátis, faça upgrade quando quiser</p>
+            <p className="text-muted-foreground text-lg">Escolha o plano ideal para você</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
@@ -265,7 +265,7 @@ export default async function LandingPage() {
               </ul>
               <Link href="/cadastro" className="block">
                 <Button variant="gold" className="w-full gap-2">
-                  <Crown className="w-4 h-4" /> Começar PRO
+                  <Crown className="w-4 h-4" /> Assinar PRO
                 </Button>
               </Link>
             </div>
@@ -379,7 +379,7 @@ export default async function LandingPage() {
           </p>
           <Link href="/cadastro">
             <Button variant="gold" size="lg" className="gap-2 text-base px-10">
-              Criar conta grátis
+              Assinar agora
               <ArrowRight className="w-5 h-5" />
             </Button>
           </Link>
