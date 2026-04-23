@@ -98,7 +98,7 @@ export function PlanCard({ profile }: { profile: Profile }) {
 
           <div className="flex items-center gap-4 flex-wrap">
             <div>
-              <span className="text-3xl font-bold font-display text-brand-gold">R$37</span>
+              <span className="text-3xl font-bold font-display text-brand-gold">R$77</span>
               <span className="text-muted-foreground text-sm">/mês</span>
             </div>
             <a href={PAGTRUST_PRO_URL} target="_blank" rel="noopener noreferrer" className="flex-1 sm:flex-none">

@@ -197,7 +197,7 @@ export default async function LandingPage() {
               <div className="mb-6">
                 <p className="text-sm text-muted-foreground uppercase tracking-wider font-medium mb-2">Essencial</p>
                 <div className="flex items-end gap-1">
-                  <span className="font-display text-5xl font-bold">R$0</span>
+                  <span className="font-display text-5xl font-bold">R$37</span>
                   <span className="text-muted-foreground mb-1">/mês</span>
                 </div>
                 <p className="text-sm text-muted-foreground mt-2">Para quem está começando</p>
@@ -227,7 +227,7 @@ export default async function LandingPage() {
                 ))}
               </ul>
               <Link href="/cadastro" className="block">
-                <Button variant="outline" className="w-full">Começar grátis</Button>
+                <Button variant="outline" className="w-full">Assinar Essencial</Button>
               </Link>
             </div>
 
@@ -241,7 +241,7 @@ export default async function LandingPage() {
               <div className="mb-6">
                 <p className="text-sm text-brand-gold uppercase tracking-wider font-medium mb-2">PRO</p>
                 <div className="flex items-end gap-1">
-                  <span className="font-display text-5xl font-bold text-brand-gold">R$37</span>
+                  <span className="font-display text-5xl font-bold text-brand-gold">R$77</span>
                   <span className="text-muted-foreground mb-1">/mês</span>
                 </div>
                 <p className="text-sm text-muted-foreground mt-2">Para quem leva milhas a sério</p>
