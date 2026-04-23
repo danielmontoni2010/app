@@ -87,11 +87,11 @@ export function Sidebar({ profile }: SidebarProps) {
         <div className="flex items-center gap-3 mb-3">
           <div className="w-8 h-8 rounded-full bg-brand-gold/20 flex items-center justify-center shrink-0">
             <span className="text-brand-gold text-sm font-bold">
-              {profile.name.charAt(0).toUpperCase()}
+              {(profile.name ?? profile.email ?? "?").charAt(0).toUpperCase()}
             </span>
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-medium text-white truncate">{profile.name}</p>
+            <p className="text-sm font-medium text-white truncate">{profile.name ?? profile.email ?? "Usuário"}</p>
             <p className="text-xs text-muted-foreground truncate">{profile.email}</p>
           </div>
         </div>
