@@ -295,32 +295,31 @@ export function OpportunityForm({ userId, opportunity }: OpportunityFormProps) {
       flightTo = `${toDateMatch[3]}-${toDateMatch[2].padStart(2,"0")}-${toDateMatch[1].padStart(2,"0")}`;
     }
 
-    // 2) Coleta todas as entradas "NomeMês: dia, dia, dia" do texto inteiro
+    // 2) Coleta TODAS as entradas "NomeMês: dia, dia, dia" do texto inteiro
     //    Cobre padrões como "Junho: 02, 06" e "Julho: 22, 23, 24"
-    if (!flightFrom || !flightTo) {
-      const monthPattern = new RegExp(
-        `(${Object.keys(MONTH_MAP).join("|")})[a-z]*\\s*:\\s*([\\d,\\s]+)`,
-        "gi"
-      );
-      const allDates: string[] = [];
+    const monthPattern = new RegExp(
+      `(${Object.keys(MONTH_MAP).join("|")})[a-z]*\\s*:\\s*([\\d,\\s]+)`,
+      "gi"
+    );
+    const allDates: string[] = [];
 
-      for (const match of Array.from(t.matchAll(monthPattern))) {
-        const mo    = MONTH_MAP[match[1].toLowerCase().substring(0, 3)];
-        if (!mo) continue;
-        const moNum = parseInt(mo);
-        // Se o mês já passou este ano, assume próximo ano
-        const year  = moNum >= curMonth ? curYear : curYear + 1;
-        const days  = match[2].match(/\d{1,2}/g) || [];
-        for (const day of days) {
-          allDates.push(`${year}-${mo}-${day.padStart(2, "0")}`);
-        }
+    for (const match of Array.from(t.matchAll(monthPattern))) {
+      const mo    = MONTH_MAP[match[1].toLowerCase().substring(0, 3)];
+      if (!mo) continue;
+      const moNum = parseInt(mo);
+      // Se o mês já passou este ano, assume próximo ano
+      const year  = moNum >= curMonth ? curYear : curYear + 1;
+      const days  = match[2].match(/\d{1,2}/g) || [];
+      for (const day of days) {
+        const dateStr = `${year}-${mo}-${day.padStart(2, "0")}`;
+        if (!allDates.includes(dateStr)) allDates.push(dateStr);
       }
+    }
 
-      if (allDates.length > 0) {
-        allDates.sort();
-        if (!flightFrom) flightFrom = allDates[0];
-        if (!flightTo)   flightTo   = allDates[allDates.length - 1];
-      }
+    if (allDates.length > 0) {
+      allDates.sort();
+      if (!flightFrom) flightFrom = allDates[0];
+      if (!flightTo)   flightTo   = allDates[allDates.length - 1];
     }
 
     // ── URL ─────────────────────────────────────────────────────────────────
@@ -348,6 +347,7 @@ export function OpportunityForm({ userId, opportunity }: OpportunityFormProps) {
     if (flightCabin)       setCabinClass(flightCabin);
     if (flightFrom)        setAvailableFrom(flightFrom);
     if (flightTo)          setAvailableTo(flightTo);
+    setAvailableDates(allDates);
     if (flightProgram)     setProgram(flightProgram);
     if (flightTitle)       setTitle(flightTitle);
     if (raw.trim())        setDescription(raw.trim());
@@ -385,6 +385,9 @@ export function OpportunityForm({ userId, opportunity }: OpportunityFormProps) {
   const [taxAmount, setTaxAmount] = useState(opportunity?.tax_amount?.toString() || "");
   const [availableFrom, setAvailableFrom] = useState(opportunity?.available_from || "");
   const [availableTo, setAvailableTo] = useState(opportunity?.available_to || "");
+  const [availableDates, setAvailableDates] = useState<string[]>(
+    (opportunity?.available_dates as string[]) || []
+  );
 
   // Campos de transferência/acúmulo
   const [bonusPercentage, setBonusPercentage] = useState(opportunity?.bonus_percentage?.toString() || "");
@@ -418,6 +421,7 @@ export function OpportunityForm({ userId, opportunity }: OpportunityFormProps) {
         tax_amount: taxAmount ? parseFloat(taxAmount) : null,
         available_from: availableFrom || null,
         available_to: availableTo || null,
+        available_dates: availableDates.length ? availableDates : null,
       }),
       // Transferência/Acúmulo
       ...(type !== "passagem" && {

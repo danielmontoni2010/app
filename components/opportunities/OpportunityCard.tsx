@@ -10,6 +10,23 @@ import { cn, formatDate, CABIN_CLASS_LABELS } from "@/lib/utils";
 import Link from "next/link";
 import type { Opportunity } from "@/lib/supabase/types";
 
+const PT_MONTHS = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+
+function groupDatesByMonth(dates: string[]): { label: string; days: number[] }[] {
+  const map = new Map<string, number[]>();
+  for (const d of [...dates].sort()) {
+    const [y, m, day] = d.split("-").map(Number);
+    const key = `${y}-${String(m).padStart(2,"0")}`;
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(day);
+  }
+  return Array.from(map.entries()).map(([key, days]) => {
+    const [y, m] = key.split("-").map(Number);
+    const label = `${PT_MONTHS[m - 1]}/${String(y).slice(2)}`;
+    return { label, days };
+  });
+}
+
 const TYPE_CONFIG: Record<string, { label: string; icon: React.ElementType; color: string }> = {
   "transferencia-bonus": { label: "Transferência Bônus", icon: TrendingUp, color: "text-blue-400" },
   "acumulo-turbinado":   { label: "Acúmulo Turbinado",   icon: Zap,         color: "text-green-400" },
@@ -103,13 +120,27 @@ export function OpportunityCard({ opportunity: opp, matchesGoal, userPlan }: Opp
                     {CABIN_CLASS_LABELS[opp.cabin_class] ?? opp.cabin_class}
                   </Badge>
                 )}
-                {(opp.available_from || opp.available_to) && (
+                {opp.available_dates && (opp.available_dates as string[]).length > 0 ? (
+                  <div className="w-full mt-1">
+                    <p className="flex items-center gap-1 text-xs text-muted-foreground font-medium mb-1">
+                      <Calendar className="w-3 h-3" /> Datas disponíveis:
+                    </p>
+                    <div className="space-y-0.5">
+                      {groupDatesByMonth(opp.available_dates as string[]).map(({ label, days }) => (
+                        <p key={label} className="text-xs text-muted-foreground leading-relaxed">
+                          <span className="text-white/70 font-semibold">{label}:</span>{" "}
+                          {days.join(", ")}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                ) : (opp.available_from || opp.available_to) ? (
                   <span className="flex items-center gap-1 text-sm text-muted-foreground">
                     <Calendar className="w-3 h-3" />
-                    {formatDate(opp.available_from ?? "")}
+                    {opp.available_from ? formatDate(opp.available_from) : ""}
                     {opp.available_to && ` — ${formatDate(opp.available_to)}`}
                   </span>
-                )}
+                ) : null}
               </>
             )}
 
@@ -144,7 +175,10 @@ export function OpportunityCard({ opportunity: opp, matchesGoal, userPlan }: Opp
 
         {/* Footer */}
         <div className="flex items-center justify-between gap-3 mt-3 pt-3 border-t border-border/50">
-          <span className="text-xs text-muted-foreground">{formatDate(opp.created_at)}</span>
+          {opp.type !== "passagem" && (
+            <span className="text-xs text-muted-foreground">{formatDate(opp.created_at)}</span>
+          )}
+          {opp.type === "passagem" && <span />}
 
           {isLocked ? (
             <Link href="/configuracoes?upgrade=true">

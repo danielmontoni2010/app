@@ -79,6 +79,7 @@ export interface Database {
           tax_amount: number | null;
           available_from: string | null;
           available_to: string | null;
+          available_dates: string[] | null;
           // Transfer/accumulation fields
           bonus_percentage: number | null;
           min_transfer: number | null;
