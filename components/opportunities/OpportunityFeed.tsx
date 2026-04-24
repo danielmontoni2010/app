@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { OpportunityCard } from "./OpportunityCard";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, MapPin, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Opportunity } from "@/lib/supabase/types";
 
@@ -13,7 +13,7 @@ const TYPE_FILTERS = [
   { value: "acumulo-turbinado", label: "Acúmulo" },
   { value: "clube", label: "Clube" },
   { value: "cartao", label: "Cartão" },
-  { value: "passagem", label: "Passagem" },
+  { value: "passagem", label: "Passagem ✈" },
 ];
 
 const PROGRAMS = ["LATAM Pass", "Smiles", "TudoAzul", "Livelo", "Azul Fidelidade"];
@@ -29,12 +29,58 @@ export function OpportunityFeed({ opportunities, matchedIds, userPlan }: Opportu
   const [programFilter, setProgramFilter] = useState("");
   const [search, setSearch] = useState("");
   const [showOnlyMatches, setShowOnlyMatches] = useState(false);
+  const [cityInput, setCityInput] = useState("");
+  const [cityFilters, setCityFilters] = useState<string[]>([]);
+  const cityInputRef = useRef<HTMLInputElement>(null);
+
+  // Adiciona cidade ao pressionar Enter ou vírgula
+  function handleCityKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if ((e.key === "Enter" || e.key === ",") && cityInput.trim()) {
+      e.preventDefault();
+      const val = cityInput.trim().toUpperCase().replace(/,/g, "");
+      if (val && !cityFilters.includes(val)) {
+        setCityFilters((prev) => [...prev, val]);
+        // Auto-seleciona filtro passagem
+        setTypeFilter("passagem");
+      }
+      setCityInput("");
+    }
+    if (e.key === "Backspace" && !cityInput && cityFilters.length > 0) {
+      setCityFilters((prev) => prev.slice(0, -1));
+    }
+  }
+
+  function removeCity(city: string) {
+    setCityFilters((prev) => prev.filter((c) => c !== city));
+  }
+
+  function handleTypeFilter(value: string) {
+    setTypeFilter(value);
+    if (value !== "passagem") {
+      setCityFilters([]);
+      setCityInput("");
+    }
+  }
 
   const filtered = useMemo(() => {
     return opportunities.filter((opp) => {
       if (typeFilter && opp.type !== typeFilter) return false;
       if (programFilter && opp.program !== programFilter) return false;
       if (showOnlyMatches && !matchedIds.has(opp.id)) return false;
+
+      // Filtro por cidades (qualquer cidade na lista bate)
+      if (cityFilters.length > 0) {
+        if (opp.type !== "passagem") return false;
+        const titleLower = opp.title?.toLowerCase() ?? "";
+        const originLower = opp.origin?.toLowerCase() ?? "";
+        const destLower = opp.destination?.toLowerCase() ?? "";
+        const matches = cityFilters.some((c) => {
+          const q = c.toLowerCase();
+          return originLower.includes(q) || destLower.includes(q) || titleLower.includes(q);
+        });
+        if (!matches) return false;
+      }
+
       if (search) {
         const q = search.toLowerCase();
         return (
@@ -45,7 +91,7 @@ export function OpportunityFeed({ opportunities, matchedIds, userPlan }: Opportu
       }
       return true;
     });
-  }, [opportunities, typeFilter, programFilter, showOnlyMatches, search, matchedIds]);
+  }, [opportunities, typeFilter, programFilter, showOnlyMatches, search, matchedIds, cityFilters]);
 
   // Ordena: matches primeiro, depois mais recentes
   const sorted = useMemo(() => {
@@ -79,7 +125,7 @@ export function OpportunityFeed({ opportunities, matchedIds, userPlan }: Opportu
           {TYPE_FILTERS.map(({ value, label }) => (
             <button
               key={value}
-              onClick={() => setTypeFilter(value)}
+              onClick={() => handleTypeFilter(value)}
               className={cn(
                 "px-3 py-1.5 rounded-lg text-sm font-medium border transition-all",
                 typeFilter === value
@@ -91,6 +137,57 @@ export function OpportunityFeed({ opportunities, matchedIds, userPlan }: Opportu
             </button>
           ))}
         </div>
+
+        {/* Filtro de cidade — aparece em Todos ou Passagem */}
+        {(typeFilter === "" || typeFilter === "passagem") && (
+          <div
+            className={cn(
+              "flex flex-wrap items-center gap-1.5 min-h-[40px] px-3 py-2 rounded-lg border bg-background/50 cursor-text transition-colors",
+              cityFilters.length > 0 || cityInput
+                ? "border-brand-gold/40"
+                : "border-border"
+            )}
+            onClick={() => cityInputRef.current?.focus()}
+          >
+            <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
+
+            {/* Chips das cidades selecionadas */}
+            {cityFilters.map((city) => (
+              <span
+                key={city}
+                className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-brand-gold/15 text-brand-gold text-xs font-semibold"
+              >
+                {city}
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); removeCity(city); }}
+                  className="hover:text-white transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+
+            <input
+              ref={cityInputRef}
+              value={cityInput}
+              onChange={(e) => setCityInput(e.target.value)}
+              onKeyDown={handleCityKeyDown}
+              placeholder={cityFilters.length === 0 ? "Filtrar passagens por cidade ou IATA (Enter para adicionar)..." : "Adicionar cidade..."}
+              className="flex-1 min-w-[180px] bg-transparent text-sm text-white placeholder:text-muted-foreground outline-none"
+            />
+
+            {(cityFilters.length > 0 || cityInput) && (
+              <button
+                type="button"
+                onClick={() => { setCityFilters([]); setCityInput(""); }}
+                className="text-muted-foreground hover:text-white transition-colors ml-auto"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Filtros de programa + match toggle */}
         <div className="flex flex-wrap items-center gap-2">
@@ -123,6 +220,9 @@ export function OpportunityFeed({ opportunities, matchedIds, userPlan }: Opportu
       <div>
         <p className="text-sm text-muted-foreground mb-4">
           {sorted.length} oportunidade{sorted.length !== 1 ? "s" : ""}
+          {cityFilters.length > 0 && (
+            <span className="text-brand-gold ml-1">· rotas com {cityFilters.join(", ")}</span>
+          )}
           {matchCount > 0 && !showOnlyMatches && (
             <span className="text-brand-gold ml-1">· {matchCount} bate{matchCount !== 1 ? "m" : ""} com suas metas 🎯</span>
           )}
@@ -131,7 +231,11 @@ export function OpportunityFeed({ opportunities, matchedIds, userPlan }: Opportu
         {sorted.length === 0 ? (
           <div className="glass rounded-xl p-12 text-center">
             <p className="text-white font-medium mb-1">Nenhuma oportunidade encontrada</p>
-            <p className="text-muted-foreground text-sm">Tente mudar os filtros ou aguarde novas oportunidades</p>
+            <p className="text-muted-foreground text-sm">
+              {cityFilters.length > 0
+                ? `Sem passagens para ${cityFilters.join(" ou ")} no momento`
+                : "Tente mudar os filtros ou aguarde novas oportunidades"}
+            </p>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
