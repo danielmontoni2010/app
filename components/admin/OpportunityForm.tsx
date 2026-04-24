@@ -332,7 +332,8 @@ export function OpportunityForm({ userId, opportunity }: OpportunityFormProps) {
       idaDates = parseDatesFromText(t);
     }
 
-    const allDates = [...new Set([...idaDates, ...voltaDates])].sort();
+    const allDatesSet = new Set([...idaDates, ...voltaDates]);
+    const allDates = Array.from(allDatesSet).sort();
     if (allDates.length > 0) {
       if (!flightFrom) flightFrom = allDates[0];
       if (!flightTo)   flightTo   = allDates[allDates.length - 1];
