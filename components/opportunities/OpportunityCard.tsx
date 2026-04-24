@@ -120,21 +120,46 @@ export function OpportunityCard({ opportunity: opp, matchesGoal, userPlan }: Opp
                     {CABIN_CLASS_LABELS[opp.cabin_class] ?? opp.cabin_class}
                   </Badge>
                 )}
-                {opp.available_dates && (opp.available_dates as string[]).length > 0 ? (
-                  <div className="w-full mt-1">
-                    <p className="flex items-center gap-1 text-xs text-muted-foreground font-medium mb-1">
-                      <Calendar className="w-3 h-3" /> Datas disponíveis:
-                    </p>
-                    <div className="space-y-0.5">
-                      {groupDatesByMonth(opp.available_dates as string[]).map(({ label, days }) => (
-                        <p key={label} className="text-xs text-muted-foreground leading-relaxed">
-                          <span className="text-white/70 font-semibold">{label}:</span>{" "}
-                          {days.join(", ")}
-                        </p>
-                      ))}
+                {opp.available_dates ? (() => {
+                  const d = opp.available_dates as { ida?: string[]; volta?: string[] };
+                  const hasIda   = d.ida   && d.ida.length   > 0;
+                  const hasVolta = d.volta && d.volta.length > 0;
+                  if (!hasIda && !hasVolta) return null;
+                  return (
+                    <div className="w-full mt-1 space-y-2">
+                      {hasIda && (
+                        <div>
+                          <p className="flex items-center gap-1 text-xs text-muted-foreground font-semibold mb-0.5">
+                            <Calendar className="w-3 h-3" /> Ida:
+                          </p>
+                          <div className="space-y-0.5 pl-4">
+                            {groupDatesByMonth(d.ida!).map(({ label, days }) => (
+                              <p key={label} className="text-xs text-muted-foreground leading-relaxed">
+                                <span className="text-white/70 font-semibold">{label}:</span>{" "}
+                                {days.join(", ")}
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {hasVolta && (
+                        <div>
+                          <p className="flex items-center gap-1 text-xs text-muted-foreground font-semibold mb-0.5">
+                            <Calendar className="w-3 h-3" /> Volta:
+                          </p>
+                          <div className="space-y-0.5 pl-4">
+                            {groupDatesByMonth(d.volta!).map(({ label, days }) => (
+                              <p key={label} className="text-xs text-muted-foreground leading-relaxed">
+                                <span className="text-white/70 font-semibold">{label}:</span>{" "}
+                                {days.join(", ")}
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ) : (opp.available_from || opp.available_to) ? (
+                  );
+                })() : (opp.available_from || opp.available_to) ? (
                   <span className="flex items-center gap-1 text-sm text-muted-foreground">
                     <Calendar className="w-3 h-3" />
                     {opp.available_from ? formatDate(opp.available_from) : ""}

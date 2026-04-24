@@ -295,29 +295,45 @@ export function OpportunityForm({ userId, opportunity }: OpportunityFormProps) {
       flightTo = `${toDateMatch[3]}-${toDateMatch[2].padStart(2,"0")}-${toDateMatch[1].padStart(2,"0")}`;
     }
 
-    // 2) Coleta TODAS as entradas "NomeMês: dia, dia, dia" do texto inteiro
-    //    Cobre padrões como "Junho: 02, 06" e "Julho: 22, 23, 24"
+    // 2) Separa seções de IDA e VOLTA e coleta datas de cada uma
     const monthPattern = new RegExp(
       `(${Object.keys(MONTH_MAP).join("|")})[a-z]*\\s*:\\s*([\\d,\\s]+)`,
       "gi"
     );
-    const allDates: string[] = [];
 
-    for (const match of Array.from(t.matchAll(monthPattern))) {
-      const mo    = MONTH_MAP[match[1].toLowerCase().substring(0, 3)];
-      if (!mo) continue;
-      const moNum = parseInt(mo);
-      // Se o mês já passou este ano, assume próximo ano
-      const year  = moNum >= curMonth ? curYear : curYear + 1;
-      const days  = match[2].match(/\d{1,2}/g) || [];
-      for (const day of days) {
-        const dateStr = `${year}-${mo}-${day.padStart(2, "0")}`;
-        if (!allDates.includes(dateStr)) allDates.push(dateStr);
+    function parseDatesFromText(section: string): string[] {
+      const dates: string[] = [];
+      for (const match of Array.from(section.matchAll(monthPattern))) {
+        const mo    = MONTH_MAP[match[1].toLowerCase().substring(0, 3)];
+        if (!mo) continue;
+        const moNum = parseInt(mo);
+        const year  = moNum >= curMonth ? curYear : curYear + 1;
+        const days  = match[2].match(/\d{1,2}/g) || [];
+        for (const day of days) {
+          const dateStr = `${year}-${mo}-${day.padStart(2, "0")}`;
+          if (!dates.includes(dateStr)) dates.push(dateStr);
+        }
       }
+      return dates.sort();
     }
 
+    const idaIdx   = t.search(/datas?\s+de\s+ida/i);
+    const voltaIdx = t.search(/datas?\s+de\s+volta/i);
+    let idaDates: string[]   = [];
+    let voltaDates: string[] = [];
+
+    if (idaIdx >= 0 && voltaIdx >= 0) {
+      idaDates   = parseDatesFromText(t.substring(idaIdx, voltaIdx));
+      voltaDates = parseDatesFromText(t.substring(voltaIdx));
+    } else if (idaIdx >= 0) {
+      idaDates = parseDatesFromText(t.substring(idaIdx));
+    } else {
+      // Sem marcadores — joga tudo em ida
+      idaDates = parseDatesFromText(t);
+    }
+
+    const allDates = [...new Set([...idaDates, ...voltaDates])].sort();
     if (allDates.length > 0) {
-      allDates.sort();
       if (!flightFrom) flightFrom = allDates[0];
       if (!flightTo)   flightTo   = allDates[allDates.length - 1];
     }
@@ -347,7 +363,7 @@ export function OpportunityForm({ userId, opportunity }: OpportunityFormProps) {
     if (flightCabin)       setCabinClass(flightCabin);
     if (flightFrom)        setAvailableFrom(flightFrom);
     if (flightTo)          setAvailableTo(flightTo);
-    setAvailableDates(allDates);
+    setAvailableDates({ ida: idaDates, volta: voltaDates });
     if (flightProgram)     setProgram(flightProgram);
     if (flightTitle)       setTitle(flightTitle);
     if (raw.trim())        setDescription(raw.trim());
@@ -385,8 +401,8 @@ export function OpportunityForm({ userId, opportunity }: OpportunityFormProps) {
   const [taxAmount, setTaxAmount] = useState(opportunity?.tax_amount?.toString() || "");
   const [availableFrom, setAvailableFrom] = useState(opportunity?.available_from || "");
   const [availableTo, setAvailableTo] = useState(opportunity?.available_to || "");
-  const [availableDates, setAvailableDates] = useState<string[]>(
-    (opportunity?.available_dates as string[]) || []
+  const [availableDates, setAvailableDates] = useState<{ ida: string[]; volta: string[] }>(
+    (opportunity?.available_dates as { ida: string[]; volta: string[] }) || { ida: [], volta: [] }
   );
 
   // Campos de transferência/acúmulo
@@ -421,7 +437,7 @@ export function OpportunityForm({ userId, opportunity }: OpportunityFormProps) {
         tax_amount: taxAmount ? parseFloat(taxAmount) : null,
         available_from: availableFrom || null,
         available_to: availableTo || null,
-        available_dates: availableDates.length ? availableDates : null,
+        available_dates: (availableDates.ida.length || availableDates.volta.length) ? availableDates : null,
       }),
       // Transferência/Acúmulo
       ...(type !== "passagem" && {
