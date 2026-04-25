@@ -69,8 +69,8 @@ export async function sendPendingNotifications(): Promise<SendResult> {
   if (!pendingAlerts?.length) return result;
 
   // 2. Busca oportunidades e perfis em queries separadas
-  const oppIds  = [...new Set(pendingAlerts.map((a: {opportunity_id: string}) => a.opportunity_id))];
-  const userIds = [...new Set(pendingAlerts.map((a: {user_id: string}) => a.user_id))];
+  const oppIds  = Array.from(new Set(pendingAlerts.map((a: {opportunity_id: string}) => a.opportunity_id)));
+  const userIds = Array.from(new Set(pendingAlerts.map((a: {user_id: string}) => a.user_id)));
 
   const { data: opps } = await supabase
     .from("opportunities")
