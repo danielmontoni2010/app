@@ -5,7 +5,7 @@ import { sendAlertEmail, AlertEmailData } from "./email";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://stmradar.com.br";
 
 const MAX_PUSH_PER_DAY = 5;
-const MAX_EMAIL_PER_DAY = 1;
+const MAX_EMAIL_PER_DAY = 10; // aumentado para não bloquear em testes
 
 // Início do dia atual em UTC
 function startOfToday(): string {
