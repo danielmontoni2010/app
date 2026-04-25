@@ -84,8 +84,10 @@ export async function sendPendingNotifications(): Promise<SendResult> {
 
   if (!opps || !profiles) return result;
 
-  const oppMap     = new Map(opps.map((o: {id: string}) => [o.id, o]));
-  const profileMap = new Map(profiles.map((p: {id: string}) => [p.id, p]));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const oppMap     = new Map(opps.map((o: any) => [o.id, o]));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const profileMap = new Map(profiles.map((p: any) => [p.id, p]));
 
   // 3. Agrupa por usuário
   const userMap = new Map<string, UserAlertGroup>();
