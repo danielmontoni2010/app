@@ -55,25 +55,10 @@ export async function sendPendingNotifications(): Promise<SendResult> {
   const result: SendResult = { usersProcessed: 0, pushSent: 0, emailsSent: 0, errors: [] };
   const todayStart = startOfToday();
 
-  // 1. Busca alertas pendentes de notificação com dados das oportunidades e perfis
+  // 1. Busca alertas pendentes (sem join — evita erro de foreign key ausente)
   const { data: pendingAlerts, error: alertsError } = await supabase
     .from("alerts")
-    .select(`
-      id,
-      user_id,
-      opportunity_id,
-      notified_push,
-      notified_email,
-      opportunities (
-        id, title, type, program, bonus_percentage,
-        origin, destination, miles_amount,
-        valid_until, available_from, available_to, is_vip
-      ),
-      profiles (
-        id, name, email, notify_push, notify_email,
-        onesignal_player_id, plan
-      )
-    `)
+    .select("id, user_id, opportunity_id, notified_push, notified_email")
     .or("notified_push.eq.false,notified_email.eq.false");
 
   if (alertsError) {
@@ -83,13 +68,32 @@ export async function sendPendingNotifications(): Promise<SendResult> {
 
   if (!pendingAlerts?.length) return result;
 
-  // 2. Agrupa por usuário
+  // 2. Busca oportunidades e perfis em queries separadas
+  const oppIds  = [...new Set(pendingAlerts.map((a: {opportunity_id: string}) => a.opportunity_id))];
+  const userIds = [...new Set(pendingAlerts.map((a: {user_id: string}) => a.user_id))];
+
+  const { data: opps } = await supabase
+    .from("opportunities")
+    .select("id, title, type, program, bonus_percentage, origin, destination, miles_amount, valid_until, available_from, available_to, is_vip")
+    .in("id", oppIds);
+
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, name, email, notify_push, notify_email, onesignal_player_id, plan")
+    .in("id", userIds);
+
+  if (!opps || !profiles) return result;
+
+  const oppMap     = new Map(opps.map((o: {id: string}) => [o.id, o]));
+  const profileMap = new Map(profiles.map((p: {id: string}) => [p.id, p]));
+
+  // 3. Agrupa por usuário
   const userMap = new Map<string, UserAlertGroup>();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   for (const alert of pendingAlerts as any[]) {
-    const profile = alert.profiles;
-    const opp = alert.opportunities;
+    const profile = profileMap.get(alert.user_id);
+    const opp     = oppMap.get(alert.opportunity_id);
     if (!profile || !opp) continue;
 
     if (!userMap.has(alert.user_id)) {
