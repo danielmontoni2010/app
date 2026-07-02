@@ -224,10 +224,10 @@ export async function POST(request: Request) {
   const externalUrl = extrairUrl(texto);
   const isVip = tipo === "passagens";
 
-  // Se não encontrou data de validade, define 3 dias a partir de agora
+  // Se não encontrou data de validade, define 4 dias a partir de agora
   const validUntilFinal = validUntil ?? (() => {
     const d = new Date();
-    d.setDate(d.getDate() + 3);
+    d.setDate(d.getDate() + 4);
     return d.toISOString().split("T")[0];
   })();
 

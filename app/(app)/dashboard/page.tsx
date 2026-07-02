@@ -15,6 +15,9 @@ export default async function DashboardPage() {
 
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
+  const todayStr = todayStart.toISOString().split("T")[0];
+  const staleCutoff = new Date();
+  staleCutoff.setDate(staleCutoff.getDate() - 4);
 
   const [
     { data: profileData },
@@ -33,7 +36,8 @@ export default async function DashboardPage() {
     supabase.from("alerts").select("*", { count: "exact", head: true })
       .eq("user_id", user.id),
     supabase.from("opportunities").select("*", { count: "exact", head: true })
-      .eq("active", true),
+      .eq("active", true)
+      .or(`valid_until.gte.${todayStr},and(valid_until.is.null,created_at.gte.${staleCutoff.toISOString()})`),
     // Últimos 5 alertas com dados da oportunidade
     supabase.from("alerts")
       .select("id, created_at, seen_at, opportunities(id, title, type, program, bonus_percentage, origin, destination, miles_amount, is_vip, active, external_url, description, cabin_class, available_from, available_to, valid_until, min_transfer, max_transfer, tax_amount, updated_at, created_by, created_at)")

@@ -10,13 +10,20 @@ export default async function OportunidadesPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const todayStr = new Date().toISOString().split("T")[0];
+  // Sem "válido até" definido: considera vencido depois de 4 dias da criação
+  const staleCutoff = new Date();
+  staleCutoff.setDate(staleCutoff.getDate() - 4);
+
   const [
     { data: profileData },
     { data: opportunities },
     { data: userAlerts },
   ] = await Promise.all([
     supabase.from("profiles").select("plan").eq("id", user.id).single(),
-    supabase.from("opportunities").select("*").eq("active", true).order("created_at", { ascending: false }),
+    supabase.from("opportunities").select("*").eq("active", true)
+      .or(`valid_until.gte.${todayStr},and(valid_until.is.null,created_at.gte.${staleCutoff.toISOString()})`)
+      .order("created_at", { ascending: false }),
     // Alertas do usuário = oportunidades que batem com as metas dele
     supabase.from("alerts").select("opportunity_id").eq("user_id", user.id),
   ]);
