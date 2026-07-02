@@ -88,6 +88,7 @@ export interface Database {
           // Novos campos de conteúdo
           how_it_works: string | null;
           opinion: string | null;
+          image_url: string | null;
         };
         Insert: Omit<Database["public"]["Tables"]["opportunities"]["Row"], "id" | "created_at" | "updated_at"> & {
           id?: string;

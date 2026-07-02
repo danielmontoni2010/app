@@ -42,9 +42,11 @@ function formatTax(value: number): string {
 }
 
 // ── Banner com foto do destino ────────────────────────────────────────────────
-function CityImageBanner({ iataCode }: { iataCode: string | null }) {
+// Prioriza o print real enviado no alerta; só busca foto de referência se não tiver um.
+function CityImageBanner({ iataCode, alertImageUrl }: { iataCode: string | null; alertImageUrl?: string | null }) {
   const cityName = iataCode ? IATA_CITIES[iataCode.toUpperCase()] ?? null : null;
-  const image = useCityImage(cityName);
+  const cityImage = useCityImage(alertImageUrl ? null : cityName);
+  const image = alertImageUrl || cityImage;
 
   return (
     <div className="relative h-28 rounded-lg overflow-hidden bg-gradient-to-br from-brand-gold/20 to-white/5">
@@ -232,7 +234,7 @@ export function OpportunityCard({ opportunity: opp, matchesGoal, userPlan }: Opp
         {/* ── Detalhes passagem ── */}
         {!isLocked && opp.type === "passagem" && (
           <div className="space-y-2.5">
-            <CityImageBanner iataCode={opp.destination} />
+            <CityImageBanner iataCode={opp.destination} alertImageUrl={opp.image_url} />
 
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 min-w-0">
@@ -293,6 +295,16 @@ export function OpportunityCard({ opportunity: opp, matchesGoal, userPlan }: Opp
               </Button>
             </a>
           </div>
+        )}
+
+        {/* ── Print do alerta — promos que não são passagem (passagem já mostra no banner) ── */}
+        {!isLocked && !isPassagem && opp.image_url && (
+          <img
+            src={opp.image_url}
+            alt={opp.title}
+            className="w-full max-h-72 object-cover rounded-lg"
+            loading="lazy"
+          />
         )}
 
         {/* ── Countdown — apenas para promos, não para passagens ── */}

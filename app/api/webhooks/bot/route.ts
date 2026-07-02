@@ -161,6 +161,36 @@ function extrairValidUntil(texto: string): string | null {
   return `${year}-${month}-${day}`;
 }
 
+const MIME_EXT: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/jpg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+};
+
+// Sobe a imagem do alerta pro Storage e retorna a URL pública (null se não tiver imagem ou der erro)
+async function uploadImagem(
+  supabase: ReturnType<typeof createAdminClient>,
+  imagem: { data: string; mimetype: string } | undefined
+): Promise<string | null> {
+  if (!imagem?.data || !imagem.mimetype) return null;
+  const ext = MIME_EXT[imagem.mimetype] || "jpg";
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+  const { error } = await supabase.storage
+    .from("alert-images")
+    .upload(path, Buffer.from(imagem.data, "base64"), { contentType: imagem.mimetype });
+
+  if (error) {
+    console.error("[bot-webhook] Erro ao subir imagem:", error);
+    return null;
+  }
+
+  const { data } = supabase.storage.from("alert-images").getPublicUrl(path);
+  return data.publicUrl;
+}
+
 export async function POST(request: Request) {
   const auth = request.headers.get("authorization") || "";
   const token = auth.replace("Bearer ", "").trim();
@@ -168,17 +198,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body: { texto?: string; programa?: string; tipo?: string };
+  let body: { texto?: string; programa?: string; tipo?: string; imagem?: { data: string; mimetype: string } };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { texto = "", programa = "", tipo = "promos" } = body;
+  const { texto = "", programa = "", tipo = "promos", imagem } = body;
   if (!texto) return NextResponse.json({ error: "texto obrigatório" }, { status: 400 });
 
   const supabase = createAdminClient();
+  const imageUrl = await uploadImagem(supabase, imagem);
   const tipoOpp = mapTipo(tipo, texto);
   const isPassagem = tipoOpp === "passagem";
 
@@ -215,6 +246,7 @@ export async function POST(request: Request) {
       is_vip: isVip,
       active: true,
       external_url: externalUrl,
+      image_url: imageUrl,
       // Campos de passagem
       ...(isPassagem && {
         origin,
