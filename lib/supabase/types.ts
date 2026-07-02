@@ -85,6 +85,9 @@ export interface Database {
           min_transfer: number | null;
           max_transfer: number | null;
           valid_until: string | null;
+          // Novos campos de conteúdo
+          how_it_works: string | null;
+          opinion: string | null;
         };
         Insert: Omit<Database["public"]["Tables"]["opportunities"]["Row"], "id" | "created_at" | "updated_at"> & {
           id?: string;

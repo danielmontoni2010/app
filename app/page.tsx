@@ -78,12 +78,12 @@ export default async function LandingPage() {
           automaticamente quando a oportunidade certa aparecer. Em tempo real.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/cadastro">
+          <a href="https://checkout.pagtrust.com.br/ck36d61cf4?funnel=fnc9689031">
             <Button variant="gold" size="lg" className="gap-2 text-base px-8">
               Assinar agora
               <ArrowRight className="w-5 h-5" />
             </Button>
-          </Link>
+          </a>
           <Link href="#como-funciona">
             <Button variant="outline" size="lg" className="text-base px-8">
               Como funciona
@@ -226,9 +226,9 @@ export default async function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <Link href="/cadastro" className="block">
+              <a href="https://checkout.pagtrust.com.br/ckbfe0a5a5?funnel=fnb8d66bb6" className="block">
                 <Button variant="outline" className="w-full">Assinar Essencial</Button>
-              </Link>
+              </a>
             </div>
 
             {/* PRO */}
@@ -263,11 +263,11 @@ export default async function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <Link href="/cadastro" className="block">
+              <a href="https://checkout.pagtrust.com.br/ck36d61cf4?funnel=fnc9689031" className="block">
                 <Button variant="gold" className="w-full gap-2">
                   <Crown className="w-4 h-4" /> Assinar PRO
                 </Button>
-              </Link>
+              </a>
             </div>
           </div>
         </div>

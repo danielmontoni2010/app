@@ -53,13 +53,8 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && isAdminRoute) {
-    const { data: adminData } = await supabase
-      .from("admins")
-      .select("id")
-      .eq("id", user.id)
-      .single();
-
-    if (!adminData) {
+    const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim());
+    if (!adminEmails.includes(user.email ?? "")) {
       const url = request.nextUrl.clone();
       url.pathname = "/dashboard";
       return NextResponse.redirect(url);

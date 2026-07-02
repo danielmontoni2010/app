@@ -6,7 +6,7 @@ export function ServiceWorkerRegistrar() {
   useEffect(() => {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
-        .register("/sw.js", { scope: "/" })
+        .register("/OneSignalSDKWorker.js", { scope: "/" })
         .then((reg) => {
           console.log("[SW] Registrado com sucesso:", reg.scope);
         })

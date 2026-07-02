@@ -17,11 +17,30 @@ export function formatCurrency(value: number): string {
 }
 
 export function formatDate(date: string | Date): string {
+  // Se for string no formato "YYYY-MM-DD", interpreta como local para evitar bug de timezone UTC
+  if (typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const [y, m, d] = date.split("-").map(Number);
+    return new Intl.DateTimeFormat("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }).format(new Date(y, m - 1, d));
+  }
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   }).format(new Date(date));
+}
+
+export function formatWeekdayDate(date: string): string {
+  // Espera "YYYY-MM-DD"; interpreta como local para evitar bug de timezone UTC
+  const [y, m, d] = date.split("-").map(Number);
+  const local = new Date(y, m - 1, d);
+  const weekday = new Intl.DateTimeFormat("pt-BR", { weekday: "short" }).format(local).replace(".", "");
+  const day = local.getDate();
+  const month = new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(local).replace(".", "");
+  return `${weekday}., ${day} de ${month}`;
 }
 
 export function formatRelativeTime(date: string | Date): string {
@@ -63,6 +82,21 @@ export function datesOverlap(
     const aTo = new Date(to);
     return aFrom <= gTo && aTo >= gFrom;
   });
+}
+
+// R$ por 1.000 milhas, usado para estimar o preço de compra das milhas por programa
+const MILES_PRICE_PER_THOUSAND: Record<string, number> = {
+  "smiles": 19.5,
+  "latam pass": 30,
+  "tudoazul": 19.5,
+  "azul fidelidade": 19.5,
+};
+
+export function calculateMilesPrice(program: string | null, milesAmount: number | null): number | null {
+  if (!program || !milesAmount) return null;
+  const rate = MILES_PRICE_PER_THOUSAND[program.toLowerCase()];
+  if (rate == null) return null;
+  return (milesAmount / 1000) * rate;
 }
 
 export const CABIN_CLASS_LABELS: Record<string, string> = {

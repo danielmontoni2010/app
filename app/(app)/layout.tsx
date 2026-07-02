@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileHeader } from "@/components/layout/mobile-header";
 import { Toaster } from "@/components/ui/toaster";
+import type { Profile } from "@/lib/supabase/types";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
@@ -10,13 +11,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
+  const { data: profileData } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", user.id)
     .single();
 
-  if (!profile) redirect("/login");
+  if (!profileData) redirect("/login");
+  const profile = profileData as unknown as Profile;
 
   return (
     <div className="min-h-screen bg-background">

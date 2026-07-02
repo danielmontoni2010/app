@@ -1,12 +1,1 @@
-{
-  "crons": [
-    {
-      "path": "/api/matching/run",
-      "schedule": "*/15 * * * *"
-    },
-    {
-      "path": "/api/notifications/send",
-      "schedule": "*/20 * * * *"
-    }
-  ]
-}
+{}

@@ -390,6 +390,8 @@ export function OpportunityForm({ userId, opportunity }: OpportunityFormProps) {
   const [program, setProgram] = useState(opportunity?.program || "");
   const [type, setType] = useState(opportunity?.type || "transferencia-bonus");
   const [description, setDescription] = useState(opportunity?.description || "");
+  const [howItWorks, setHowItWorks] = useState((opportunity as (typeof opportunity & { how_it_works?: string | null }))?.how_it_works || "");
+  const [opinion, setOpinion] = useState((opportunity as (typeof opportunity & { opinion?: string | null }))?.opinion || "");
   const [externalUrl, setExternalUrl] = useState(opportunity?.external_url || "");
   const [isVip, setIsVip] = useState(opportunity?.is_vip ?? false);
   const [active, setActive] = useState(opportunity?.active ?? true);
@@ -425,6 +427,8 @@ export function OpportunityForm({ userId, opportunity }: OpportunityFormProps) {
       program,
       type,
       description: description || null,
+      how_it_works: howItWorks || null,
+      opinion: opinion || null,
       external_url: externalUrl || null,
       is_vip: isVip,
       active,
@@ -705,15 +709,39 @@ export function OpportunityForm({ userId, opportunity }: OpportunityFormProps) {
         </>
       )}
 
+      {/* Como funciona */}
+      <div className="space-y-2">
+        <Label htmlFor="howItWorks">✨ Como funciona a promo</Label>
+        <Textarea
+          id="howItWorks"
+          placeholder={"✅ 80% de bônus para assinantes Clube Azul\n✅ 50% de bônus para demais clientes"}
+          value={howItWorks}
+          onChange={(e) => setHowItWorks(e.target.value)}
+          rows={3}
+        />
+      </div>
+
       {/* Descrição */}
       <div className="space-y-2">
-        <Label htmlFor="description">Descrição / Observações</Label>
+        <Label htmlFor="description">📋 Descrição / Detalhes</Label>
         <Textarea
           id="description"
-          placeholder="Detalhes adicionais, regras, como aproveitar..."
+          placeholder="Detalhes adicionais, regras, bônus por tempo de clube..."
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={4}
+        />
+      </div>
+
+      {/* Opinião do Daniel */}
+      <div className="space-y-2">
+        <Label htmlFor="opinion">💛 Opinião do Daniel</Label>
+        <Textarea
+          id="opinion"
+          placeholder="Sua análise sobre a oportunidade: vale a pena? para quem? dicas..."
+          value={opinion}
+          onChange={(e) => setOpinion(e.target.value)}
+          rows={3}
         />
       </div>
 

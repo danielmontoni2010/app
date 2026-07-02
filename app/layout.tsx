@@ -49,6 +49,7 @@ export default function RootLayout({
       <body className="antialiased min-h-screen bg-background text-foreground">
         <ServiceWorkerRegistrar />
         {children}
+        {/* OneSignal SDK é carregado dinamicamente só após o usuário permitir push */}
       </body>
     </html>
   );

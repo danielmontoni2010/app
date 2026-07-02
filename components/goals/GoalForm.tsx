@@ -36,8 +36,12 @@ export function GoalForm({ userId, goal }: GoalFormProps) {
   const [title, setTitle] = useState(goal?.title || "");
   const [origin, setOrigin] = useState(goal?.origin || "");
   const [destination, setDestination] = useState(goal?.destination || "");
-  const [dateFrom, setDateFrom] = useState(goal?.date_from || "");
-  const [dateTo, setDateTo] = useState(goal?.date_to || "");
+  const [dateFrom, setDateFrom] = useState(
+    goal?.date_from ? goal.date_from.substring(0, 7) : ""
+  );
+  const [dateTo, setDateTo] = useState(
+    goal?.date_to ? goal.date_to.substring(0, 7) : ""
+  );
   const [maxMiles, setMaxMiles] = useState(goal?.max_miles?.toString() || "");
   const [cabinClass, setCabinClass] = useState<"economy" | "business" | "any">((goal?.cabin_class as "economy" | "business" | "any") || "any");
   const [program, setProgram] = useState(goal?.program || "qualquer");
@@ -45,6 +49,13 @@ export function GoalForm({ userId, goal }: GoalFormProps) {
   const [description, setDescription] = useState(goal?.description || "");
   const [oppTypes, setOppTypes] = useState<string[]>(goal?.opportunity_types || []);
   const [targetProgram, setTargetProgram] = useState(goal?.target_program || "qualquer");
+
+  function monthToLastDay(ym: string): string {
+    if (!ym) return "";
+    const [y, m] = ym.split("-").map(Number);
+    const last = new Date(y, m, 0).getDate(); // dia 0 do próximo mês = último dia do mês atual
+    return `${ym}-${String(last).padStart(2, "0")}`;
+  }
 
   function toggleOppType(v: string) {
     setOppTypes((prev) => prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]);
@@ -66,8 +77,8 @@ export function GoalForm({ userId, goal }: GoalFormProps) {
       ...(type === "flight" && {
         origin: origin.toUpperCase(),
         destination: destination.toUpperCase(),
-        date_from: dateFrom || null,
-        date_to: dateTo || null,
+        date_from: dateFrom ? `${dateFrom}-01` : null,
+        date_to: dateTo ? monthToLastDay(dateTo) : null,
         max_miles: maxMiles ? parseInt(maxMiles) : null,
         cabin_class: cabinClass as "economy" | "business" | "any",
         program: (program && program !== "qualquer") ? program : null,
@@ -156,12 +167,12 @@ export function GoalForm({ userId, goal }: GoalFormProps) {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="dateFrom">Data de ida (início)</Label>
-              <Input id="dateFrom" type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+              <Label htmlFor="dateFrom">Mês de ida (início)</Label>
+              <Input id="dateFrom" type="month" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="dateTo">Data de ida (fim)</Label>
-              <Input id="dateTo" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+              <Label htmlFor="dateTo">Mês de ida (fim)</Label>
+              <Input id="dateTo" type="month" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
