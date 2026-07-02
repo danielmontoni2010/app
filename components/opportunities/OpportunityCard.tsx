@@ -286,9 +286,9 @@ export function OpportunityCard({ opportunity: opp, matchesGoal, userPlan }: Opp
               )}
             </div>
 
-            <a href={DAN_TRAVEL_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="block">
-              <Button variant="gold" className="w-full gap-2 text-sm h-9">
-                <MessageCircle className="w-4 h-4" />
+            <a href={DAN_TRAVEL_WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
+              <Button variant="gold" size="sm" className="gap-1.5 text-xs h-7">
+                <MessageCircle className="w-3 h-3" />
                 Emitir com a Dan Travel
               </Button>
             </a>
