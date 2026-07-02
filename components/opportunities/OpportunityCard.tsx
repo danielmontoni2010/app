@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   Zap, Plane, TrendingUp, CreditCard, Star,
-  Gauge, ExternalLink, Lock, Clock, ChevronDown, ChevronUp
+  Gauge, ExternalLink, Lock, Clock, ChevronDown, ChevronUp, MessageCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn, formatDate, formatWeekdayDate, calculateMilesPrice, CABIN_CLASS_LABELS } from "@/lib/utils";
@@ -14,6 +14,7 @@ import { IATA_CITIES } from "@/lib/iata-cities";
 import { useCityImage } from "@/hooks/use-city-image";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+const DAN_TRAVEL_WHATSAPP_URL = "https://wa.me/message/YBBCRIQPF4W4N1";
 const PT_MONTHS = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
 function groupDatesByMonth(dates: string[]): { label: string; days: number[] }[] {
@@ -284,6 +285,13 @@ export function OpportunityCard({ opportunity: opp, matchesGoal, userPlan }: Opp
                 </Badge>
               )}
             </div>
+
+            <a href={DAN_TRAVEL_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="block">
+              <Button variant="gold" className="w-full gap-2 text-sm h-9">
+                <MessageCircle className="w-4 h-4" />
+                Emitir com a Dan Travel
+              </Button>
+            </a>
           </div>
         )}
 
