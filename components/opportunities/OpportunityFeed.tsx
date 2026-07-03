@@ -29,36 +29,49 @@ export function OpportunityFeed({ opportunities, matchedIds, userPlan }: Opportu
   const [programFilter, setProgramFilter] = useState("");
   const [search, setSearch] = useState("");
   const [showOnlyMatches, setShowOnlyMatches] = useState(false);
-  const [cityInput, setCityInput] = useState("");
-  const [cityFilters, setCityFilters] = useState<string[]>([]);
-  const cityInputRef = useRef<HTMLInputElement>(null);
+  const [originInput, setOriginInput] = useState("");
+  const [originFilters, setOriginFilters] = useState<string[]>([]);
+  const [destInput, setDestInput] = useState("");
+  const [destFilters, setDestFilters] = useState<string[]>([]);
+  const originInputRef = useRef<HTMLInputElement>(null);
+  const destInputRef = useRef<HTMLInputElement>(null);
 
-  // Adiciona cidade ao pressionar Enter ou vírgula
-  function handleCityKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if ((e.key === "Enter" || e.key === ",") && cityInput.trim()) {
-      e.preventDefault();
-      const val = cityInput.trim().toUpperCase().replace(/,/g, "");
-      if (val && !cityFilters.includes(val)) {
-        setCityFilters((prev) => [...prev, val]);
-        // Auto-seleciona filtro passagem
-        setTypeFilter("passagem");
+  function makeCityHandlers(
+    input: string,
+    setInput: (v: string) => void,
+    filters: string[],
+    setFilters: (fn: (prev: string[]) => string[]) => void
+  ) {
+    function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+      if ((e.key === "Enter" || e.key === ",") && input.trim()) {
+        e.preventDefault();
+        const val = input.trim().toUpperCase().replace(/,/g, "");
+        if (val && !filters.includes(val)) {
+          setFilters((prev) => [...prev, val]);
+          setTypeFilter("passagem");
+        }
+        setInput("");
       }
-      setCityInput("");
+      if (e.key === "Backspace" && !input && filters.length > 0) {
+        setFilters((prev) => prev.slice(0, -1));
+      }
     }
-    if (e.key === "Backspace" && !cityInput && cityFilters.length > 0) {
-      setCityFilters((prev) => prev.slice(0, -1));
+    function remove(city: string) {
+      setFilters((prev) => prev.filter((c) => c !== city));
     }
+    return { handleKeyDown, remove };
   }
 
-  function removeCity(city: string) {
-    setCityFilters((prev) => prev.filter((c) => c !== city));
-  }
+  const originHandlers = makeCityHandlers(originInput, setOriginInput, originFilters, setOriginFilters);
+  const destHandlers = makeCityHandlers(destInput, setDestInput, destFilters, setDestFilters);
 
   function handleTypeFilter(value: string) {
     setTypeFilter(value);
     if (value !== "passagem") {
-      setCityFilters([]);
-      setCityInput("");
+      setOriginFilters([]);
+      setOriginInput("");
+      setDestFilters([]);
+      setDestInput("");
     }
   }
 
@@ -68,15 +81,26 @@ export function OpportunityFeed({ opportunities, matchedIds, userPlan }: Opportu
       if (programFilter && opp.program !== programFilter) return false;
       if (showOnlyMatches && !matchedIds.has(opp.id)) return false;
 
-      // Filtro por cidades (qualquer cidade na lista bate)
-      if (cityFilters.length > 0) {
+      // Filtro por origem (qualquer uma da lista bate)
+      if (originFilters.length > 0) {
         if (opp.type !== "passagem") return false;
-        const titleLower = opp.title?.toLowerCase() ?? "";
         const originLower = opp.origin?.toLowerCase() ?? "";
-        const destLower = opp.destination?.toLowerCase() ?? "";
-        const matches = cityFilters.some((c) => {
+        const titleLower = opp.title?.toLowerCase() ?? "";
+        const matches = originFilters.some((c) => {
           const q = c.toLowerCase();
-          return originLower.includes(q) || destLower.includes(q) || titleLower.includes(q);
+          return originLower.includes(q) || titleLower.includes(q);
+        });
+        if (!matches) return false;
+      }
+
+      // Filtro por destino (qualquer um da lista bate)
+      if (destFilters.length > 0) {
+        if (opp.type !== "passagem") return false;
+        const destLower = opp.destination?.toLowerCase() ?? "";
+        const titleLower = opp.title?.toLowerCase() ?? "";
+        const matches = destFilters.some((c) => {
+          const q = c.toLowerCase();
+          return destLower.includes(q) || titleLower.includes(q);
         });
         if (!matches) return false;
       }
@@ -91,7 +115,7 @@ export function OpportunityFeed({ opportunities, matchedIds, userPlan }: Opportu
       }
       return true;
     });
-  }, [opportunities, typeFilter, programFilter, showOnlyMatches, search, matchedIds, cityFilters]);
+  }, [opportunities, typeFilter, programFilter, showOnlyMatches, search, matchedIds, originFilters, destFilters]);
 
   // Ordena: matches primeiro, depois mais recentes
   const sorted = useMemo(() => {
@@ -138,54 +162,98 @@ export function OpportunityFeed({ opportunities, matchedIds, userPlan }: Opportu
           ))}
         </div>
 
-        {/* Filtro de cidade — aparece em Todos ou Passagem */}
+        {/* Filtro de origem/destino — aparece em Todos ou Passagem */}
         {(typeFilter === "" || typeFilter === "passagem") && (
-          <div
-            className={cn(
-              "flex flex-wrap items-center gap-1.5 min-h-[40px] px-3 py-2 rounded-lg border bg-background/50 cursor-text transition-colors",
-              cityFilters.length > 0 || cityInput
-                ? "border-brand-gold/40"
-                : "border-border"
-            )}
-            onClick={() => cityInputRef.current?.focus()}
-          >
-            <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div
+              className={cn(
+                "flex flex-wrap items-center gap-1.5 min-h-[40px] px-3 py-2 rounded-lg border bg-background/50 cursor-text transition-colors",
+                originFilters.length > 0 || originInput ? "border-brand-gold/40" : "border-border"
+              )}
+              onClick={() => originInputRef.current?.focus()}
+            >
+              <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
 
-            {/* Chips das cidades selecionadas */}
-            {cityFilters.map((city) => (
-              <span
-                key={city}
-                className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-brand-gold/15 text-brand-gold text-xs font-semibold"
-              >
-                {city}
+              {originFilters.map((city) => (
+                <span
+                  key={city}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-brand-gold/15 text-brand-gold text-xs font-semibold"
+                >
+                  {city}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); originHandlers.remove(city); }}
+                    className="hover:text-white transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+
+              <input
+                ref={originInputRef}
+                value={originInput}
+                onChange={(e) => setOriginInput(e.target.value)}
+                onKeyDown={originHandlers.handleKeyDown}
+                placeholder={originFilters.length === 0 ? "Origem (cidade ou IATA)..." : "Adicionar..."}
+                className="flex-1 min-w-[120px] bg-transparent text-sm text-white placeholder:text-muted-foreground outline-none"
+              />
+
+              {(originFilters.length > 0 || originInput) && (
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); removeCity(city); }}
-                  className="hover:text-white transition-colors"
+                  onClick={() => { setOriginFilters([]); setOriginInput(""); }}
+                  className="text-muted-foreground hover:text-white transition-colors ml-auto"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-4 h-4" />
                 </button>
-              </span>
-            ))}
+              )}
+            </div>
 
-            <input
-              ref={cityInputRef}
-              value={cityInput}
-              onChange={(e) => setCityInput(e.target.value)}
-              onKeyDown={handleCityKeyDown}
-              placeholder={cityFilters.length === 0 ? "Filtrar passagens por cidade ou IATA (Enter para adicionar)..." : "Adicionar cidade..."}
-              className="flex-1 min-w-[180px] bg-transparent text-sm text-white placeholder:text-muted-foreground outline-none"
-            />
+            <div
+              className={cn(
+                "flex flex-wrap items-center gap-1.5 min-h-[40px] px-3 py-2 rounded-lg border bg-background/50 cursor-text transition-colors",
+                destFilters.length > 0 || destInput ? "border-brand-gold/40" : "border-border"
+              )}
+              onClick={() => destInputRef.current?.focus()}
+            >
+              <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
 
-            {(cityFilters.length > 0 || cityInput) && (
-              <button
-                type="button"
-                onClick={() => { setCityFilters([]); setCityInput(""); }}
-                className="text-muted-foreground hover:text-white transition-colors ml-auto"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
+              {destFilters.map((city) => (
+                <span
+                  key={city}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-brand-gold/15 text-brand-gold text-xs font-semibold"
+                >
+                  {city}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); destHandlers.remove(city); }}
+                    className="hover:text-white transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+
+              <input
+                ref={destInputRef}
+                value={destInput}
+                onChange={(e) => setDestInput(e.target.value)}
+                onKeyDown={destHandlers.handleKeyDown}
+                placeholder={destFilters.length === 0 ? "Destino (cidade ou IATA)..." : "Adicionar..."}
+                className="flex-1 min-w-[120px] bg-transparent text-sm text-white placeholder:text-muted-foreground outline-none"
+              />
+
+              {(destFilters.length > 0 || destInput) && (
+                <button
+                  type="button"
+                  onClick={() => { setDestFilters([]); setDestInput(""); }}
+                  className="text-muted-foreground hover:text-white transition-colors ml-auto"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -220,8 +288,12 @@ export function OpportunityFeed({ opportunities, matchedIds, userPlan }: Opportu
       <div>
         <p className="text-sm text-muted-foreground mb-4">
           {sorted.length} oportunidade{sorted.length !== 1 ? "s" : ""}
-          {cityFilters.length > 0 && (
-            <span className="text-brand-gold ml-1">· rotas com {cityFilters.join(", ")}</span>
+          {(originFilters.length > 0 || destFilters.length > 0) && (
+            <span className="text-brand-gold ml-1">
+              · rotas
+              {originFilters.length > 0 && ` de ${originFilters.join(", ")}`}
+              {destFilters.length > 0 && ` para ${destFilters.join(", ")}`}
+            </span>
           )}
           {matchCount > 0 && !showOnlyMatches && (
             <span className="text-brand-gold ml-1">· {matchCount} bate{matchCount !== 1 ? "m" : ""} com suas metas 🎯</span>
@@ -232,8 +304,8 @@ export function OpportunityFeed({ opportunities, matchedIds, userPlan }: Opportu
           <div className="glass rounded-xl p-12 text-center">
             <p className="text-white font-medium mb-1">Nenhuma oportunidade encontrada</p>
             <p className="text-muted-foreground text-sm">
-              {cityFilters.length > 0
-                ? `Sem passagens para ${cityFilters.join(" ou ")} no momento`
+              {originFilters.length > 0 || destFilters.length > 0
+                ? "Sem passagens para essa rota no momento"
                 : "Tente mudar os filtros ou aguarde novas oportunidades"}
             </p>
           </div>
