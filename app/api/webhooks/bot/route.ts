@@ -6,11 +6,17 @@ import { sendPendingNotifications, sendBroadcastPush } from "@/lib/notifications
 const BOT_SECRET = process.env.BOT_SECRET;
 
 // Mapeia tipo do bot → tipo da oportunidade
+// "Clube" é só quando o produto oferecido É a assinatura do clube em si
+// (ex: "ao assinar o Clube X", "novas adesões do Clube X"). Muita promoção de
+// acúmulo cita "exclusivo Clube Livelo" só como faixa de bônus — isso não é
+// venda de assinatura, continua sendo acúmulo.
+const CLUBE_ASSINATURA_RE = /(assinar|assinatura|ades[ãa]o|ades[õo]es)[^.\n]{0,25}clube|clube[^.\n]{0,25}(assinar|assinatura|ades[ãa]o|ades[õo]es)/i;
+
 function mapTipo(botTipo: string, texto: string): string {
   if (botTipo === "passagens") return "passagem";
   const t = texto.toLowerCase();
   if (t.includes("transfer") && (t.includes("bônus") || t.includes("bonus"))) return "transferencia-bonus";
-  if (t.includes("clube") || t.includes("assinatura")) return "clube";
+  if (CLUBE_ASSINATURA_RE.test(texto)) return "clube";
   if (t.includes("cartão") || t.includes("cartao")) return "cartao";
   return "acumulo-turbinado";
 }
