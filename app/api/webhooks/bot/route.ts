@@ -151,8 +151,8 @@ function extrairUrl(texto: string): string | null {
 
 // Extrai data de validade (ex: "válido até 31/05", "até 31/05/2026")
 function extrairValidUntil(texto: string): string | null {
-  const m = texto.match(/v[aá]lid[ao]\s*at[eé]\s*(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/i)
-    || texto.match(/at[eé]\s*(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/i);
+  const m = texto.match(/v[aá]lid[ao]\s*at[eé][:\s*_]*(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/i)
+    || texto.match(/at[eé][:\s*_]*(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/i);
   if (!m) return null;
 
   const day = m[1].padStart(2, "0");
