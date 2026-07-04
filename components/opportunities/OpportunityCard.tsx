@@ -42,11 +42,11 @@ function formatTax(value: number): string {
 }
 
 // ── Banner com foto do destino ────────────────────────────────────────────────
-// Prioriza o print real enviado no alerta; só busca foto de referência se não tiver um.
-function CityImageBanner({ iataCode, alertImageUrl }: { iataCode: string | null; alertImageUrl?: string | null }) {
+// Sempre a foto de ponto turístico da cidade — nunca o print do alerta
+// (esse é exclusivo dos outros tipos de oportunidade).
+function CityImageBanner({ iataCode }: { iataCode: string | null }) {
   const cityName = iataCode ? IATA_CITIES[iataCode.toUpperCase()] ?? null : null;
-  const cityImage = useCityImage(alertImageUrl ? null : cityName);
-  const image = alertImageUrl || cityImage;
+  const image = useCityImage(cityName);
 
   return (
     <div className="relative h-28 rounded-lg overflow-hidden bg-gradient-to-br from-brand-gold/20 to-white/5">
@@ -239,7 +239,7 @@ export function OpportunityCard({ opportunity: opp, matchesGoal, userPlan }: Opp
         {/* ── Detalhes passagem ── */}
         {!isLocked && opp.type === "passagem" && (
           <div className="space-y-2.5">
-            <CityImageBanner iataCode={opp.destination} alertImageUrl={opp.image_url} />
+            <CityImageBanner iataCode={opp.destination} />
 
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 min-w-0">
