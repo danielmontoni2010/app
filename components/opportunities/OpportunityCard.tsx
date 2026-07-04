@@ -81,7 +81,12 @@ function useCountdown(validUntil: string | null) {
   useEffect(() => {
     if (!validUntil) return;
     const calc = () => {
-      const diff = new Date(validUntil).getTime() - Date.now();
+      // valid_until é "YYYY-MM-DD" (sem hora); trata como válido até o
+      // fim do dia no horário local, não meia-noite UTC (que expiraria
+      // horas antes do esperado no fuso do Brasil)
+      const [y, m, d] = validUntil.split("-").map(Number);
+      const endOfDay = new Date(y, m - 1, d, 23, 59, 59, 999).getTime();
+      const diff = endOfDay - Date.now();
       if (diff <= 0) { setTimeLeft({ days: 0, hours: 0, minutes: 0 }); return; }
       const days    = Math.floor(diff / 86400000);
       const hours   = Math.floor((diff % 86400000) / 3600000);
