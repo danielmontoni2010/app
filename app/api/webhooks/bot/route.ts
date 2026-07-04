@@ -24,10 +24,16 @@ function mapTipo(botTipo: string, texto: string): string {
 // Extrai título limpando formatação WhatsApp
 function extrairTitulo(texto: string): string {
   const linhas = texto.split("\n").map(l => l.trim()).filter(Boolean);
-  const primeira = (linhas[0] || "Nova oportunidade")
-    .replace(/[*_~`]/g, "")
-    .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "")
-    .trim();
+  const limpa = (s: string) => s.replace(/[*_~`]/g, "").replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "").trim();
+  let primeira = limpa(linhas[0] || "Nova oportunidade");
+
+  // Título genérico tipo "LIVELO | BOM" (só programa + nota, sem o parceiro)
+  // se repete em várias promoções diferentes — usa a linha seguinte
+  // (nome do parceiro/loja) pra diferenciar
+  if (/^\S+\s*\|\s*(bom|excelente|ótimo|otimo|ruim|razoável|razoavel)$/i.test(primeira) && linhas[1]) {
+    primeira = `${primeira} — ${limpa(linhas[1])}`;
+  }
+
   return primeira.substring(0, 120) || "Nova oportunidade";
 }
 
@@ -239,6 +245,25 @@ export async function POST(request: Request) {
 
   // Limpa o texto para exibição (remove asteriscos e formatação WhatsApp)
   const descricaoLimpa = limparTexto(texto);
+
+  // Trava contra duplicata: mesmo texto completo criado nas últimas 12h
+  // (reconexões do bot, reenvio no grupo, etc.) não vira uma segunda
+  // oportunidade. Compara pela descrição (texto completo), não pelo título —
+  // vários alertas (ex: parceiros Livelo) têm título genérico repetido
+  // ("LIVELO | BOM") mesmo sendo promoções de lojas diferentes.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: existing } = await (supabase as any)
+    .from("opportunities")
+    .select("id")
+    .eq("description", descricaoLimpa)
+    .eq("type", tipoOpp)
+    .gte("created_at", new Date(Date.now() - 12 * 3600000).toISOString())
+    .limit(1)
+    .maybeSingle();
+
+  if (existing) {
+    return NextResponse.json({ ok: true, id: existing.id, titulo, duplicate: true });
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: opp, error } = await (supabase as any)
