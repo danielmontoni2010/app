@@ -30,7 +30,7 @@ function extrairTitulo(texto: string): string {
   // Título genérico tipo "LIVELO | BOM" (só programa + nota, sem o parceiro)
   // se repete em várias promoções diferentes — troca pela linha seguinte
   // (ex: "Fast Shop — até 6 pontos por real"), simplificada pra "Loja - pontos"
-  if (/^\S+\s*\|\s*(bom|excelente|ótimo|otimo|ruim|razoável|razoavel)$/i.test(primeira) && linhas[1]) {
+  if (/^.+\|\s*(bom|excelente|ótimo|otimo|ruim|razoável|razoavel)$/i.test(primeira) && linhas[1]) {
     primeira = limpa(linhas[1])
       .replace(/\s*—\s*/g, " - ")
       .replace(/\s+por\s+(real|d[oó]lar)\b/i, "");
