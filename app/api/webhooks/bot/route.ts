@@ -161,16 +161,31 @@ function extrairUrl(texto: string): string | null {
   return m ? m[0].replace(/[.,;)]+$/, "") : null;
 }
 
-// Extrai data de validade (ex: "válido até 31/05", "até 31/05/2026")
+// Extrai data de validade (ex: "válido até 31/05", "até 31/05/2026",
+// "válida de: 02/07 a 03/07/2026" — usa a data final do intervalo)
 function extrairValidUntil(texto: string): string | null {
   const m = texto.match(/v[aá]lid[ao]\s*at[eé][:\s*_]*(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/i)
     || texto.match(/at[eé][:\s*_]*(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/i);
-  if (!m) return null;
+  if (m) {
+    const day = m[1].padStart(2, "0");
+    const month = m[2].padStart(2, "0");
+    const year = m[3] ? (m[3].length === 2 ? `20${m[3]}` : m[3]) : new Date().getFullYear().toString();
+    return `${year}-${month}-${day}`;
+  }
 
-  const day = m[1].padStart(2, "0");
-  const month = m[2].padStart(2, "0");
-  const year = m[3] ? (m[3].length === 2 ? `20${m[3]}` : m[3]) : new Date().getFullYear().toString();
-  return `${year}-${month}-${day}`;
+  // Formato intervalo "DD/MM(/YYYY)? a DD/MM(/YYYY)?" (ex: "válida de: 02/07 a 03/07/2026").
+  // Quando há mais de um intervalo no texto (ex: várias lojas com prazos diferentes),
+  // usa a data final mais distante — o alerta ainda vale enquanto alguma oferta valer.
+  const rangeMatches = Array.from(texto.matchAll(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?\s*a\s*(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/gi));
+  let latest: string | null = null;
+  for (const rm of rangeMatches) {
+    const day = rm[4].padStart(2, "0");
+    const month = rm[5].padStart(2, "0");
+    const year = rm[6] ? (rm[6].length === 2 ? `20${rm[6]}` : rm[6]) : new Date().getFullYear().toString();
+    const candidate = `${year}-${month}-${day}`;
+    if (!latest || candidate > latest) latest = candidate;
+  }
+  return latest;
 }
 
 const MIME_EXT: Record<string, string> = {
